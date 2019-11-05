@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
-# Authors: Olaf Hauk <olaf.hauk@mrc-cbu.cam.ac.uk>
-#
-# License: BSD (3-clause)
 """
-Point-spread functions (PSFs) and cross-talk functions (CTFs) for beamformer.
+==============================================================
+Compute point-spread functions for LCMV beamformers
+==============================================================
 
 Visualise CTF at one vertex for LCMV beamformer for covariance matrices
 computed for pre- and post-stimulus intervals, respectively.

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-# Authors: Olaf Hauk <olaf.hauk@mrc-cbu.cam.ac.uk>
-#
-# License: BSD (3-clause)
 """Compute resolution matrix for LCMV beamformers."""
 from mne import pick_channels_forward
 from mne.utils import logger
@@ -13,15 +9,16 @@ def make_resolution_matrix_lcmv(forward, filters):
     Parameters
     ----------
     forward : dict
-        Forward Operator.
+        Forward Solution.
     filters : Instance of Beamformer
          Dictionary containing filter weights from LCMV beamformer
          (see mne.beamformer.make_lcmv).
 
     Returns
     -------
-        resmat : array of shape [n_dipoles_lcmv, n_dipoles_fwd]
-        Resolution matrix (filter matrix times forward operator).
+    resmat : array of shape [n_dipoles_lcmv, n_dipoles_fwd]
+        Resolution matrix (filter matrix multiplied to leadfield from
+        forward solution).
         Numbers of rows (n_dipoles_lcmv) and columns (n_dipoles_fwd) may differ
         depending on orientation constraints of filter and forward solution,
         respectively.
