@@ -1,5 +1,5 @@
 # Authors: Alexandre Gramfort <alexandre.gramfort@inria.fr>
-#          Matti Hamalainen <msh@nmr.mgh.harvard.edu>
+#          Matti Hämäläinen <msh@nmr.mgh.harvard.edu>
 #          Denis Engemann <denis.engemann@gmail.com>
 #          Andrew Dykstra <andrew.r.dykstra@gmail.com>
 #          Teon Brooks <teon.brooks@gmail.com>
@@ -94,7 +94,7 @@ def equalize_channels(candidates, verbose=None):
     Parameters
     ----------
     candidates : list
-        list Raw | Epochs | Evoked | AverageTFR
+        Can be a list of Raw, Epochs, Evoked, or AverageTFR.
     %(verbose)s
 
     Notes
@@ -172,6 +172,7 @@ class ContainsMixin(object):
         """Get a list of channel type for each channel."""
         return [channel_type(self.info, n)
                 for n in range(len(self.info['ch_names']))]
+
 
 # XXX Eventually de-duplicate with _kind_dict of mne/io/meas_info.py
 _human2fiff = {'ecg': FIFF.FIFFV_ECG_CH,
@@ -379,18 +380,20 @@ class SetChannelsMixin(object):
                        % name)
                 raise ValueError(msg)
 
-    def set_channel_types(self, mapping):
+    @verbose
+    def set_channel_types(self, mapping, verbose=None):
         """Define the sensor type of channels.
 
         Note: The following sensor types are accepted:
             ecg, eeg, emg, eog, exci, ias, misc, resp, seeg, stim, syst, ecog,
-            hbo, hbr
+            hbo, hbr, fnirs_raw, fnirs_od
 
         Parameters
         ----------
         mapping : dict
-            a dictionary mapping a channel to a sensor type (str)
+            A dictionary mapping a channel to a sensor type (str)
             {'EEG061': 'eog'}.
+        %(verbose_meth)s
 
         Notes
         -----
@@ -449,7 +452,7 @@ class SetChannelsMixin(object):
         Parameters
         ----------
         mapping : dict | callable
-            a dictionary mapping the old channel to a new channel name
+            A dictionary mapping the old channel to a new channel name
             e.g. {'EEG061' : 'EEG161'}. Can also be a callable function
             that takes and returns a string (new in version 0.10.0).
 
@@ -573,17 +576,14 @@ class SetChannelsMixin(object):
                             show=show)
 
     @copy_function_doc_to_method_doc(anonymize_info)
-    def anonymize(self):
+    def anonymize(self, daysback=None, keep_his=False):
         """
         .. versionadded:: 0.13.0
         """
-        anonymize_info(self.info)
+        anonymize_info(self.info, daysback=daysback, keep_his=keep_his)
         if hasattr(self, 'annotations'):
-            # XXX : anonymize should rather subtract a random date
-            # rather than setting it to None
-            self.annotations.orig_time = None
+            self.annotations.orig_time = self.info['meas_date']
             self.annotations.onset -= self._first_time
-
         return self
 
 
@@ -927,7 +927,7 @@ class InterpolationMixin(object):
 
     @verbose
     def interpolate_bads(self, reset_bads=True, mode='accurate',
-                         origin=(0., 0., 0.04), verbose=None):
+                         origin='auto', verbose=None):
         """Interpolate bad MEG and EEG channels.
 
         Operates in place.
@@ -942,8 +942,8 @@ class InterpolationMixin(object):
             channels.
         origin : array-like, shape (3,) | str
             Origin of the sphere in the head coordinate frame and in meters.
-            Can be ``'auto'``, which means a head-digitization-based origin
-            fit. Default is ``(0., 0., 0.04)``.
+            Can be ``'auto'`` (default), which means a head-digitization-based
+            origin fit.
 
             .. versionadded:: 0.17
         %(verbose_meth)s
@@ -957,6 +957,7 @@ class InterpolationMixin(object):
         -----
         .. versionadded:: 0.9.0
         """
+        from ..bem import _check_origin
         from .interpolation import _interpolate_bads_eeg, _interpolate_bads_meg
 
         _check_preload(self, "interpolation")
@@ -964,8 +965,8 @@ class InterpolationMixin(object):
         if len(self.info['bads']) == 0:
             warn('No bad channels to interpolate. Doing nothing...')
             return self
-
-        _interpolate_bads_eeg(self)
+        origin = _check_origin(origin, self.info)
+        _interpolate_bads_eeg(self, origin=origin)
         _interpolate_bads_meg(self, mode=mode, origin=origin)
 
         if reset_bads is True:
@@ -984,7 +985,7 @@ def rename_channels(info, mapping):
     info : dict
         Measurement info.
     mapping : dict | callable
-        a dictionary mapping the old channel to a new channel name
+        A dictionary mapping the old channel to a new channel name
         e.g. {'EEG061' : 'EEG161'}. Can also be a callable function
         that takes and returns a string (new in version 0.10.0).
     """

@@ -1,6 +1,10 @@
 """
 ==============================================================
+<<<<<<< HEAD
 Compute spatial resolution metrics in source space.
+=======
+Compute spatial resolution metrics in source space
+>>>>>>> master
 ==============================================================
 
 Compute peak localisation error and spatial deviation for the point-spread
@@ -13,8 +17,13 @@ L2-MNE vs dSPM).
 References
 ----------
 .. [1] Hauk et al. "Towards an Objective Evaluation of EEG/MEG Source
+<<<<<<< HEAD
 Estimation Methods: The Linear Tool Kit", bioRxiv 2019,
 doi: https://doi.org/10.1101/672956.
+=======
+   Estimation Methods: The Linear Tool Kit", bioRxiv 2019,
+   doi: https://doi.org/10.1101/672956.
+>>>>>>> master
 """
 # Author: Olaf Hauk <olaf.hauk@mrc-cbu.cam.ac.uk>
 #
@@ -22,8 +31,13 @@ doi: https://doi.org/10.1101/672956.
 
 import mne
 from mne.datasets import sample
+<<<<<<< HEAD
 from mne.minimum_norm.resolution_matrix import make_resolution_matrix
 from mne.minimum_norm.resolution_metrics import resolution_metrics
+=======
+from mne.minimum_norm import make_resolution_matrix
+from mne.minimum_norm import resolution_metrics
+>>>>>>> master
 
 print(__doc__)
 
@@ -59,6 +73,7 @@ lambda2 = 1.0 / snr ** 2
 rm_mne = make_resolution_matrix(forward, inverse_operator,
                                 method='MNE', lambda2=lambda2)
 
+<<<<<<< HEAD
 # compute resolution matrix for sLORETA
 rm_spm = make_resolution_matrix(forward, inverse_operator,
                                 method='dSPM', lambda2=lambda2)
@@ -125,3 +140,68 @@ brain_sd_diff = diff_sd.plot('sample', 'inflated', 'lh',
 
 print('dSPM has generally higher spatial deviation than MNE (blue color), i.e. \
       worse performance to distinguish different sources.')
+=======
+# compute resolution matrix for dSPM
+rm_dspm = make_resolution_matrix(forward, inverse_operator,
+                                 method='dSPM', lambda2=lambda2)
+
+# Compute peak localisation error (PLE) for point spread functions (PSFs)
+ple_mne_psf = resolution_metrics(rm_mne, inverse_operator['src'],
+                                 function='psf', metric='peak_err')
+ple_dspm_psf = resolution_metrics(rm_dspm, inverse_operator['src'],
+                                  function='psf', metric='peak_err')
+
+# Compute spatial deviation (SD) for PSFs
+sd_mne_psf = resolution_metrics(rm_mne, inverse_operator['src'],
+                                function='psf', metric='sd_ext')
+sd_dspm_psf = resolution_metrics(rm_dspm, inverse_operator['src'],
+                                 function='psf', metric='sd_ext')
+
+# Visualise peak localisation error (PLE) across the whole cortex for PSF
+brain_ple_mne = ple_mne_psf.plot('sample', 'inflated', 'lh',
+                                 subjects_dir=subjects_dir, figure=1,
+                                 clim=dict(kind='value', lims=(0, 2, 4)))
+brain_ple_mne.add_text(0.1, 0.9, 'PLE MNE', 'title', font_size=16)
+
+brain_ple_dspm = ple_dspm_psf.plot('sample', 'inflated', 'lh',
+                                   subjects_dir=subjects_dir, figure=2,
+                                   clim=dict(kind='value', lims=(0, 2, 4)))
+brain_ple_dspm.add_text(0.1, 0.9, 'PLE dSPM', 'title', font_size=16)
+
+# Subtract the two distributions and plot this difference
+diff_ple = ple_mne_psf - ple_dspm_psf
+
+brain_ple_diff = diff_ple.plot('sample', 'inflated', 'lh',
+                               subjects_dir=subjects_dir, figure=3,
+                               clim=dict(kind='value', pos_lims=(0., 1., 2.)))
+brain_ple_diff.add_text(0.1, 0.9, 'PLE MNE-dSPM', 'title', font_size=16)
+
+###############################################################################
+# These plots show that  dSPM has generally lower peak localization error (red
+# color) than MNE in deeper brain areas, but higher error (blue color) in more
+# superficial areas.
+#
+# Next we'll visualise spatial deviation (SD) across the whole cortex for PSF:
+
+brain_sd_mne = sd_mne_psf.plot('sample', 'inflated', 'lh',
+                               subjects_dir=subjects_dir, figure=4,
+                               clim=dict(kind='value', lims=(0, 2, 4)))
+brain_sd_mne.add_text(0.1, 0.9, 'SD MNE', 'title', font_size=16)
+
+brain_sd_dspm = sd_dspm_psf.plot('sample', 'inflated', 'lh',
+                                 subjects_dir=subjects_dir, figure=5,
+                                 clim=dict(kind='value', lims=(0, 2, 4)))
+brain_sd_dspm.add_text(0.1, 0.9, 'SD dSPM', 'title', font_size=16)
+
+# Subtract the two distributions and plot this difference
+diff_sd = sd_mne_psf - sd_dspm_psf
+
+brain_sd_diff = diff_sd.plot('sample', 'inflated', 'lh',
+                             subjects_dir=subjects_dir, figure=6,
+                             clim=dict(kind='value', pos_lims=(0., 1., 2.)))
+brain_sd_diff.add_text(0.1, 0.9, 'SD MNE-dSPM', 'title', font_size=16)
+
+###############################################################################
+# These plots show that dSPM has generally higher spatial deviation than MNE
+# (blue color), i.e. worse performance to distinguish different sources.
+>>>>>>> master

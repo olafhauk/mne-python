@@ -13,7 +13,7 @@ from ..minimum_norm.inverse import (combine_xyz, _prepare_forward,
 from ..forward import is_fixed_orient
 from ..io.pick import pick_channels_evoked
 from ..io.proj import deactivate_proj
-from ..utils import logger, verbose, _check_depth
+from ..utils import logger, verbose, _check_depth, sum_squared
 from ..dipole import Dipole
 
 from .mxne_optim import (mixed_norm_solver, iterative_mixed_norm_solver, _Phi,
@@ -316,7 +316,7 @@ def mixed_norm(evoked, forward, noise_cov, alpha, loose='auto', depth=0.8,
 
     References
     ----------
-    .. [1] A. Gramfort, M. Kowalski, M. Hamalainen,
+    .. [1] A. Gramfort, M. Kowalski, M. Hämäläinen,
        "Mixed-norm estimates for the M/EEG inverse problem using accelerated
        gradient methods", Physics in Medicine and Biology, 2012.
        https://doi.org/10.1088/0031-9155/57/7/1937
@@ -366,7 +366,8 @@ def mixed_norm(evoked, forward, noise_cov, alpha, loose='auto', depth=0.8,
             Vh = Vh[:time_pca]
         M = U * s
 
-    # Scaling to make setting of alpha easy
+    # Scaling to make setting of tol and alpha easy
+    tol *= sum_squared(M)
     n_dip_per_pos = 1 if is_fixed_orient(forward) else 3
     alpha_max = norm_l2inf(np.dot(gain.T, M), n_dip_per_pos, copy=False)
     alpha_max *= 0.01
@@ -489,23 +490,23 @@ def tf_mixed_norm(evoked, forward, noise_cov,
         Maximum number of iterations.
     tol : float
         Tolerance parameter.
-    weights: None | array | SourceEstimate
+    weights : None | array | SourceEstimate
         Weight for penalty in mixed_norm. Can be None or
         1d array of length n_sources or a SourceEstimate e.g. obtained
         with wMNE or dSPM or fMRI.
-    weights_min: float
+    weights_min : float
         Do not consider in the estimation sources for which weights
         is less than weights_min.
-    pca: bool
+    pca : bool
         If True the rank of the data is reduced to true dimension.
-    debias: bool
+    debias : bool
         Remove coefficient amplitude bias due to L1 penalty.
-    wsize: int or array-like
+    wsize : int or array-like
         Length of the STFT window in samples (must be a multiple of 4).
         If an array is passed, multiple TF dictionaries are used (each having
         its own wsize and tstep) and each entry of wsize must be a multiple
         of 4. See [3]_.
-    tstep: int or array-like
+    tstep : int or array-like
         Step between successive windows in samples (must be a multiple of 2,
         a divider of wsize and smaller than wsize/2) (default: wsize/2).
         If an array is passed, multiple TF dictionaries are used (each having
@@ -536,7 +537,6 @@ def tf_mixed_norm(evoked, forward, noise_cov,
         .. versionadded:: 0.18
     %(verbose)s
 
-
     Returns
     -------
     stc : instance of SourceEstimate
@@ -551,13 +551,13 @@ def tf_mixed_norm(evoked, forward, noise_cov,
 
     References
     ----------
-    .. [1] A. Gramfort, D. Strohmeier, J. Haueisen, M. Hamalainen, M. Kowalski
+    .. [1] A. Gramfort, D. Strohmeier, J. Haueisen, M. Hämäläinen, M. Kowalski
        "Time-Frequency Mixed-Norm Estimates: Sparse M/EEG imaging with
        non-stationary source activations",
        Neuroimage, Volume 70, pp. 410-422, 15 April 2013.
        DOI: 10.1016/j.neuroimage.2012.12.051
 
-    .. [2] A. Gramfort, D. Strohmeier, J. Haueisen, M. Hamalainen, M. Kowalski
+    .. [2] A. Gramfort, D. Strohmeier, J. Haueisen, M. Hämäläinen, M. Kowalski
        "Functional Brain Imaging with M/EEG Using Structured Sparsity in
        Time-Frequency Dictionaries",
        Proceedings Information Processing in Medical Imaging
@@ -611,12 +611,13 @@ def tf_mixed_norm(evoked, forward, noise_cov,
     logger.info('Whitening data matrix.')
     M = np.dot(whitener, M)
 
-    # Scaling to make setting of alpha easy
     n_steps = np.ceil(M.shape[1] / tstep.astype(float)).astype(int)
     n_freqs = wsize // 2 + 1
     n_coefs = n_steps * n_freqs
     phi = _Phi(wsize, tstep, n_coefs)
 
+    # Scaling to make setting of tol and alpha easy
+    tol *= sum_squared(M)
     alpha_max = norm_epsilon_inf(gain, M, phi, l1_ratio, n_dip_per_pos)
     alpha_max *= 0.01
     gain /= alpha_max

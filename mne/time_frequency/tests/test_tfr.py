@@ -662,6 +662,8 @@ def test_compute_tfr():
             kwargs = {key: value}  # FIXME pep8
             pytest.raises(ValueError, _compute_tfr, data, freqs, sfreq,
                           **kwargs)
+    with pytest.raises(ValueError, match='above Nyquist'):
+        _compute_tfr(data, [sfreq], sfreq)
 
     # No time_bandwidth param in morlet
     pytest.raises(ValueError, _compute_tfr, data, freqs, sfreq,
@@ -695,6 +697,23 @@ def test_compute_tfr():
             assert_array_equal(shape[1:], out.shape)
 
 
+@pytest.mark.parametrize('method', ('multitaper', 'morlet'))
+@pytest.mark.parametrize('decim', (1, slice(1, None, 2), 3))
+def test_compute_tfr_correct(method, decim):
+    """Test that TFR actually gets us our freq back."""
+    sfreq = 1000.
+    t = np.arange(1000) / sfreq
+    f = 50.
+    data = np.sin(2 * np.pi * 50. * t)
+    data *= np.hanning(data.size)
+    data = data[np.newaxis, np.newaxis]
+    freqs = np.arange(10, 111, 10)
+    assert f in freqs
+    tfr = _compute_tfr(data, freqs, sfreq, method=method, decim=decim,
+                       n_cycles=2)[0, 0]
+    assert freqs[np.argmax(np.abs(tfr).mean(-1))] == f
+
+
 @requires_pandas
 def test_getitem_epochsTFR():
     """Test GetEpochsMixin in the context of EpochsTFR."""
@@ -719,9 +738,14 @@ def test_getitem_epochsTFR():
 
     # Choose time x (full) bandwidth product
     time_bandwidth = 4.0  # With 0.5 s time windows, this gives 8 Hz smoothing
-    power = tfr_multitaper(epochs, freqs=freqs, n_cycles=n_cycles,
-                           use_fft=True, time_bandwidth=time_bandwidth,
-                           return_itc=False, average=False, n_jobs=1)
+    kwargs = dict(freqs=freqs, n_cycles=n_cycles, use_fft=True,
+                  time_bandwidth=time_bandwidth, return_itc=False,
+                  average=False, n_jobs=1)
+    power = tfr_multitaper(epochs, **kwargs)
+
+    # Check decim affects sfreq
+    power_decim = tfr_multitaper(epochs, decim=2, **kwargs)
+    assert power.info['sfreq'] / 2. == power_decim.info['sfreq']
 
     # Check that power and epochs metadata is the same
     assert_metadata_equal(epochs.metadata, power.metadata)
@@ -760,5 +784,6 @@ def test_getitem_epochsTFR():
 
     # Test that current state is maintained
     assert_array_equal(power.next(), power.data[ind + 1])
+
 
 run_tests_if_main()

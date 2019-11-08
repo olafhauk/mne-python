@@ -263,12 +263,12 @@ def maxwell_filter(raw, origin='auto', int_order=8, ext_order=3,
     .. [1] Taulu S. and Kajola M. "Presentation of electromagnetic
            multichannel data: The signal space separation method,"
            Journal of Applied Physics, vol. 97, pp. 124905 1-10, 2005.
-           http://lib.tkk.fi/Diss/2008/isbn9789512295654/article2.pdf
+           https://doi.org/10.1063/1.1935742
 
     .. [2] Taulu S. and Simola J. "Spatiotemporal signal space separation
            method for rejecting nearby interference in MEG measurements,"
            Physics in Medicine and Biology, vol. 51, pp. 1759-1768, 2006.
-           http://lib.tkk.fi/Diss/2008/isbn9789512295654/article3.pdf
+           https://doi.org/10.1088/0031-9155/51/7/008
     """  # noqa: E501
     # There are an absurd number of different possible notations for spherical
     # coordinates, which confounds the notation for spherical harmonics.  Here,
@@ -1421,7 +1421,7 @@ def _check_info(info, sss=True, tsss=True, calibration=True, ctc=True):
         for msg, key, doing in (('SSS', 'sss_info', sss),
                                 ('tSSS', 'max_st', tsss),
                                 ('fine calibration', 'sss_cal', calibration),
-                                ('cross-talk cancellation',  'sss_ctc', ctc)):
+                                ('cross-talk cancellation', 'sss_ctc', ctc)):
             if not doing:
                 continue
             if len(ent['max_info'][key]) > 0:

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Authors: Alexandre Gramfort <alexandre.gramfort@inria.fr>
-#          Matti Hamalainen <msh@nmr.mgh.harvard.edu>
+#          Matti Hämäläinen <msh@nmr.mgh.harvard.edu>
 #          Teon Brooks <teon.brooks@gmail.com>
 #          Stefan Appelhoff <stefan.appelhoff@mailbox.org>
 #          Joan Massich <mailsik@gmail.com>
@@ -8,7 +8,6 @@
 # License: BSD (3-clause)
 
 from collections import OrderedDict, Counter
-from copy import deepcopy
 
 import datetime
 import os.path as op
@@ -50,8 +49,7 @@ _cardinal_kind_rev = {1: 'LPA', 2: 'Nasion', 3: 'RPA', 4: 'Inion'}
 
 def _format_dig_points(dig):
     """Format the dig points nicely."""
-    dig_points = [DigPoint(d) for d in dig] if dig is not None else dig
-    return Digitization(dig_points)
+    return [DigPoint(d) for d in dig] if dig is not None else dig
 
 
 def _get_dig_eeg(dig):
@@ -116,33 +114,6 @@ class DigPoint(dict):
             return False
         else:
             return np.allclose(self['r'], other['r'])
-
-
-class Digitization(list):
-    """Represent a list of DigPoint objects.
-
-    Parameters
-    ----------
-    elements : list | None
-        A list of DigPoint objects.
-    """
-
-    def __init__(self, elements=None):
-
-        elements = list() if elements is None else elements
-
-        if not all([isinstance(_, DigPoint) for _ in elements]):
-            _msg = 'Digitization expected a iterable of DigPoint objects.'
-            raise ValueError(_msg)
-        else:
-            super(Digitization, self).__init__(deepcopy(elements))
-
-    def __eq__(self, other):  # noqa: D105
-        if not isinstance(other, (Digitization, list)) or \
-           len(self) != len(other):
-            return False
-        else:
-            return all([ss == oo for ss, oo in zip(self, other)])
 
 
 def _read_dig_fif(fid, meas_info):
@@ -226,7 +197,8 @@ def _foo_get_data_from_dig(dig):
             dig_ch_pos_location.append(d['r'])
 
     dig_coord_frames = set([d['coord_frame'] for d in dig])
-    assert len(dig_coord_frames) == 1, 'Only single coordinate frame in dig is supported' # noqa # XXX
+    assert len(dig_coord_frames) == 1, \
+        'Only single coordinate frame in dig is supported'  # XXX
 
     return Bunch(
         nasion=fids.get('nasion', None),
@@ -363,6 +335,13 @@ def _write_dig_points(fname, dig_points):
         raise ValueError(msg)
 
 
+def _coord_frame_const(coord_frame):
+    if not isinstance(coord_frame, str) or coord_frame not in _str_to_frame:
+        raise ValueError('coord_frame must be one of %s, got %s'
+                         % (sorted(_str_to_frame.keys()), coord_frame))
+    return _str_to_frame[coord_frame]
+
+
 def _make_dig_points(nasion=None, lpa=None, rpa=None, hpi=None,
                      extra_points=None, dig_ch_pos=None,
                      coord_frame='head'):
@@ -391,11 +370,7 @@ def _make_dig_points(nasion=None, lpa=None, rpa=None, hpi=None,
     dig : list of dicts
         A container of DigPoints to be added to the info['dig'].
     """
-    if not isinstance(coord_frame, str) or coord_frame not in _str_to_frame:
-        raise ValueError('coord_frame must be one of %s, got %s'
-                         % (sorted(_str_to_frame.keys()), coord_frame))
-    else:
-        coord_frame = _str_to_frame[coord_frame]
+    coord_frame = _coord_frame_const(coord_frame)
 
     dig = []
     if lpa is not None:

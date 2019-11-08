@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+# -*- coding: utf-8 -*-
+# Authors: Olaf Hauk <olaf.hauk@mrc-cbu.cam.ac.uk>
+#          Daniel McCloy <dan.mccloy@gmail.com>
+#
+# License: BSD (3-clause)
+>>>>>>> master
 """
 Test the following properties for resolution metrics.
 
@@ -8,14 +16,24 @@ Currently only for fixed source orientations.
 
 import os.path as op
 import numpy as np
+<<<<<<< HEAD
+=======
+import pytest
+>>>>>>> master
 from numpy.testing import (assert_array_almost_equal, assert_array_equal,
                            assert_)
 
 import mne
 from mne.datasets import testing
 from mne.minimum_norm.resolution_matrix import make_resolution_matrix
+<<<<<<< HEAD
 from mne.minimum_norm.resolution_metrics import (resolution_metrics,
                                                  _rectify_resolution_matrix)
+=======
+from mne.minimum_norm.spatial_resolution import (resolution_metrics,
+                                                 _rectify_resolution_matrix)
+from mne.utils import run_tests_if_main
+>>>>>>> master
 
 data_path = testing.data_path(download=False)
 subjects_dir = op.join(data_path, 'subjects')
@@ -61,11 +79,19 @@ def test_resolution_metrics():
     rm_mne = make_resolution_matrix(fwd, inv,
                                     method='MNE', lambda2=lambda2)
 
+<<<<<<< HEAD
+=======
+    # compute very smooth MNE
+    rm_mne_smooth = make_resolution_matrix(fwd, inv,
+                                           method='MNE', lambda2=100.)
+
+>>>>>>> master
     # compute resolution matrix for sLORETA
     rm_lor = make_resolution_matrix(fwd, inv,
                                     method='sLORETA', lambda2=lambda2)
 
     # Compute localisation error (STCs)
+<<<<<<< HEAD
     le_mne_psf = resolution_metrics(rm_mne, fwd['src'], function='psf',
                                     kind='localization_error', metric='peak')
     le_mne_ctf = resolution_metrics(rm_mne, fwd['src'], function='ctf',
@@ -93,15 +119,93 @@ def test_resolution_metrics():
     assert_array_almost_equal(le_mne_psf.data, le_mne_ctf.data)
     # For MNE: SD for PSF and CTF equal?
     assert_array_almost_equal(sd_mne_psf.data, sd_mne_ctf.data)
+=======
+    # Peak
+    le_mne_psf = resolution_metrics(rm_mne, fwd['src'], function='psf',
+                                    metric='peak_err')
+    le_mne_ctf = resolution_metrics(rm_mne, fwd['src'], function='ctf',
+                                    metric='peak_err')
+    le_lor_psf = resolution_metrics(rm_lor, fwd['src'], function='psf',
+                                    metric='peak_err')
+    # Centre-of-gravity
+    cog_mne_psf = resolution_metrics(rm_mne, fwd['src'], function='psf',
+                                     metric='cog_err')
+    cog_mne_ctf = resolution_metrics(rm_mne, fwd['src'], function='ctf',
+                                     metric='cog_err')
+
+    # Compute spatial spread (STCs)
+    # Spatial deviation
+    sd_mne_psf = resolution_metrics(rm_mne, fwd['src'], function='psf',
+                                    metric='sd_ext')
+    sd_mne_psf_smooth = resolution_metrics(rm_mne_smooth, fwd['src'],
+                                           function='psf',
+                                           metric='sd_ext')
+    sd_mne_ctf = resolution_metrics(rm_mne, fwd['src'], function='ctf',
+                                    metric='sd_ext')
+    sd_lor_ctf = resolution_metrics(rm_lor, fwd['src'], function='ctf',
+                                    metric='sd_ext')
+    # Maximum radius
+    mr_mne_psf = resolution_metrics(rm_mne, fwd['src'], function='psf',
+                                    metric='maxrad_ext', threshold=0.6)
+    mr_mne_psf_smooth = resolution_metrics(rm_mne_smooth, fwd['src'],
+                                           function='psf', metric='maxrad_ext',
+                                           threshold=0.6)
+    mr_mne_ctf = resolution_metrics(rm_mne, fwd['src'], function='ctf',
+                                    metric='maxrad_ext', threshold=0.6)
+    mr_lor_ctf = resolution_metrics(rm_lor, fwd['src'], function='ctf',
+                                    metric='maxrad_ext', threshold=0.6)
+    # lower threshold -> larger spatial extent
+    mr_mne_psf_0 = resolution_metrics(rm_mne, fwd['src'], function='psf',
+                                      metric='maxrad_ext', threshold=0.)
+    mr_mne_psf_9 = resolution_metrics(rm_mne, fwd['src'], function='psf',
+                                      metric='maxrad_ext', threshold=0.9)
+
+    # Compute relative amplitude (STCs)
+    ra_mne_psf = resolution_metrics(rm_mne, fwd['src'], function='psf',
+                                    metric='peak_amp')
+    ra_mne_ctf = resolution_metrics(rm_mne, fwd['src'], function='ctf',
+                                    metric='peak_amp')
+
+    # Tests
+
+    with pytest.raises(ValueError, match='is not a recognized metric'):
+        resolution_metrics(rm_mne, fwd['src'], function='psf', metric='foo')
+    with pytest.raises(ValueError, match='a recognised resolution function'):
+        resolution_metrics(rm_mne, fwd['src'], function='foo',
+                           metric='peak_err')
+
+    # For MNE: PLE for PSF and CTF equal?
+    assert_array_almost_equal(le_mne_psf.data, le_mne_ctf.data)
+    assert_array_almost_equal(cog_mne_psf.data, cog_mne_ctf.data)
+    # For MNE: SD and maxrad for PSF and CTF equal?
+    assert_array_almost_equal(sd_mne_psf.data, sd_mne_ctf.data)
+    assert_array_almost_equal(mr_mne_psf.data, mr_mne_ctf.data)
+    assert_((mr_mne_psf_0.data > mr_mne_psf_9.data).all())
+>>>>>>> master
     # For MNE: RA for PSF and CTF equal?
     assert_array_almost_equal(ra_mne_psf.data, ra_mne_ctf.data)
     # Zero PLE for sLORETA?
     assert_((le_lor_psf.data == 0.).all())
+<<<<<<< HEAD
     # Spatial deviation of CTFs for MNE and sLORETA equal?
     assert_array_almost_equal(sd_mne_ctf.data, sd_lor_ctf.data)
+=======
+    # Spatial deviation and maxrad of CTFs for MNE and sLORETA equal?
+    assert_array_almost_equal(sd_mne_ctf.data, sd_lor_ctf.data)
+    assert_array_almost_equal(mr_mne_ctf.data, mr_lor_ctf.data)
+    # Smooth MNE has larger spatial extent?
+    assert_(np.sum(sd_mne_psf_smooth.data) > np.sum(sd_mne_psf.data))
+    assert_(np.sum(mr_mne_psf_smooth.data) > np.sum(mr_mne_psf.data))
+>>>>>>> master
 
     # test "rectification" of resolution matrix
     r1 = np.ones([8, 4])
     r2 = _rectify_resolution_matrix(r1)
 
     assert_array_equal(r2, np.sqrt(2) * np.ones((4, 4)))
+<<<<<<< HEAD
+=======
+
+
+run_tests_if_main()
+>>>>>>> master

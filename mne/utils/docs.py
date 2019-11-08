@@ -100,7 +100,6 @@ filter_length : str | int
       ``phase="zero-double"``.
     * **int**: Specified length in samples. For fir_design="firwin",
       this should not be used.
-
 """
 docdict['l_trans_bandwidth'] = """
 l_trans_bandwidth : float | str
@@ -238,7 +237,11 @@ trans : str | dict | instance of Transform | None
     .. versionchanged:: 0.19
        Support for 'fsaverage' argument.
 """
-
+docdict['subjects_dir'] = """
+subjects_dir : str | None
+    The path to the freesurfer subjects reconstructions.
+    It corresponds to Freesurfer environment variable SUBJECTS_DIR.
+"""
 
 # Simulation
 docdict['interp'] = """
@@ -420,6 +423,15 @@ docdict["proj_topomap_kwargs"] = """
         The axes to plot to. If list, the list must be a list of Axes of
         the same length as the number of projectors. If instance of Axes,
         there must be only one projector. Defaults to None.
+    vlim : tuple of length 2 | 'joint'
+        Colormap limits to use. If :class:`tuple`, specifies the lower and
+        upper bounds of the colormap (in that order); providing ``None`` for
+        either of these will set the corresponding boundary at the min/max of
+        the data (separately for each projector). The keyword value ``'joint'``
+        will compute the colormap limits jointly across all provided
+        projectors of the same channel type, using the min/max of the projector
+        data. If vlim is ``'joint'``, ``info`` must not be ``None``. Defaults
+        to ``(None, None)``.
 """
 
 # Montage
@@ -551,12 +563,18 @@ def copy_function_doc_to_method_doc(source):
     Parameters
     ----------
     source : function
-        Function to copy the docstring from
+        Function to copy the docstring from.
 
     Returns
     -------
     wrapper : function
-        The decorated method
+        The decorated method.
+
+    Notes
+    -----
+    The parsing performed is very basic and will break easily on docstrings
+    that are not formatted exactly according to the ``numpydoc`` standard.
+    Always inspect the resulting docstring when using this decorator.
 
     Examples
     --------
@@ -597,12 +615,6 @@ def copy_function_doc_to_method_doc(source):
             -----
             .. versionadded:: 0.13.0
     <BLANKLINE>
-
-    Notes
-    -----
-    The parsing performed is very basic and will break easily on docstrings
-    that are not formatted exactly according to the ``numpydoc`` standard.
-    Always inspect the resulting docstring when using this decorator.
     """
     def wrapper(func):
         doc = source.__doc__.split('\n')

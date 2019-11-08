@@ -188,6 +188,7 @@ Datasets
    fetch_aparc_sub_parcellation
    fetch_fsaverage
    fetch_hcp_mmp_parcellation
+   fnirs_motor.data_path
    hf_sef.data_path
    kiloword.data_path
    limo.load_data
@@ -312,6 +313,7 @@ Projections:
    make_dig_montage
    read_dig_polhemus_isotrak
    read_dig_captrack
+   read_dig_dat
    read_dig_egi
    read_dig_fif
    read_dig_hpts
@@ -359,6 +361,9 @@ Projections:
    read_ica
    run_ica
    corrmap
+   optical_density
+   beer_lambert_law
+   short_channels
 
 EEG referencing:
 
@@ -419,6 +424,7 @@ EEG referencing:
    Transform
    quat_to_rot
    rot_to_quat
+   read_ras_mni_t
 
 Events
 ======
@@ -633,6 +639,7 @@ Inverse Solutions
    source_induced_power
    write_inverse_operator
    make_resolution_matrix
+   resolution_metrics
    get_cross_talk
    get_point_spread
 
