@@ -3210,7 +3210,7 @@ def compute_distance_to_center(src, verbose=None):
 
     Returns
     -------
-    depth : array of shape (,n_vertices)
+    depths : array of shape (,n_vertices)
         The distances of source space vertices with respect to their center-of-
         gravity.
     """
