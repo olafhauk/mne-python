@@ -10,7 +10,8 @@ from shutil import copytree
 import pytest
 import scipy
 import numpy as np
-from numpy.testing import assert_array_equal, assert_allclose, assert_equal
+from numpy.testing import (assert_array_equal, assert_allclose, assert_equal,
+                           assert_array_less)
 from mne.datasets import testing
 import mne
 from mne import (read_source_spaces, vertex_to_mni, write_source_spaces,
@@ -24,7 +25,7 @@ from mne.utils import (requires_nibabel, run_subprocess,
                        modified_env, requires_mne, run_tests_if_main,
                        check_version)
 from mne.surface import _accumulate_normals, _triangle_neighbors
-from mne.source_space import _get_mgz_header
+from mne.source_space import _get_mgz_header, compute_distance_to_center
 from mne.source_estimate import _get_src_type
 from mne.transforms import apply_trans, _get_trans
 from mne.source_space import (get_volume_labels_from_aseg,
@@ -56,6 +57,20 @@ trans_fname = op.join(data_path, 'MEG', 'sample',
 base_dir = op.join(op.dirname(__file__), '..', 'io', 'tests', 'data')
 fname_small = op.join(base_dir, 'small-src.fif.gz')
 rng = np.random.RandomState(0)
+
+
+@testing.requires_testing_data
+def test_compute_distance_to_center():
+    """Test computation of distances between vertices and sensors."""
+    src = read_source_spaces(fname_fs)
+    n_verts = src[0]['nuse'] + src[1]['nuse']
+
+    # minimum distances between vertices and sensors
+    depths = compute_distance_to_center(src)
+
+    assert depths.shape == (n_verts,)
+    assert_array_less(0., depths)
+    assert_array_less(depths, 0.1)
 
 
 @testing.requires_testing_data

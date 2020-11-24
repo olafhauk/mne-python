@@ -3197,3 +3197,31 @@ def _get_src_nn(s, use_cps=True, vertices=None):
     else:
         nn = s['nn'][vertices, :]
     return nn
+
+
+def compute_distance_to_center(src, verbose=None):
+    """Compute distances between vertices and their center-of-gravity.
+
+    Parameters
+    ----------
+    src : instance of SourceSpaces
+        The object to select vertices from.
+    %(verbose)s
+
+    Returns
+    -------
+    depth : array of shape (,n_vertices)
+        The distances of source space vertices with respect to their center-of-
+        gravity.
+    """
+    assert isinstance(src, SourceSpaces)
+
+    src_pos = np.vstack([
+        s['rr'][s['inuse'].astype(np.bool)] for s in src
+    ])
+    # centre of gravity of source space vertices
+    mean_pos = src_pos.mean(axis=0)  # across vertices
+    src_pos -= mean_pos
+    depths = np.sqrt(np.sum(src_pos ** 2, axis=1))
+
+    return depths
