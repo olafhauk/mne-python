@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - uses: pre-commit/action@v3.0.1
@@ -83,19 +83,19 @@ jobs:
             python: '3.10'
             kind: old
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: false
       - run: ./tools/github_actions_env_vars.sh
       # Xvfb/OpenGL
-      - uses: pyvista/setup-headless-display-action@v3
+      - uses: pyvista/setup-headless-display-action@v4
         with:
           qt: true
           pyvista: false
           wm: false
       # Python (if pip)
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
         if: startswith(matrix.kind, 'pip')
